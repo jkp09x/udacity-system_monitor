@@ -12,17 +12,28 @@ using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
-/*You need to complete the mentioned TODOs in order to satisfy the rubric criteria "The student will be able to extract and display basic data about the system."
 
-You need to properly format the uptime. Refer to the comments mentioned in format. cpp for formatting the uptime.*/
+// Return the system's CPU
+Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return the system's CPU
-Processor& System::Cpu() { 
-  return cpu_; 
+// Return a container composed of the system's processes
+vector<Process>& System::Processes() { 
+  vector<int> pids{LinuxParser::Pids()};
+  
+  for (auto pid : pids) {
+    Process proc{pid};
+    processes_.emplace_back(proc);
+  }
+  
+  // Update CPU utilization
+  for (auto& proc : processes_) {
+    proc.CpuUtilization(LinuxParser::ActiveJiffies(proc.Pid()), LinuxParser::Jiffies());
+  }
+  
+  // TODO: Need to sort processes based on CPU Util
+  
+  return processes_;
 }
-
-// TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
 
 // Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
@@ -39,6 +50,6 @@ int System::RunningProcesses() { return LinuxParser::RunningProcesses(); }
 // Return the total number of processes on the system
 int System::TotalProcesses() { return LinuxParser::TotalProcesses(); }
 
-// TODO: Return the number of seconds since the system started running
+// Return the number of seconds since the system started running
 long System::UpTime() { return LinuxParser::UpTime(); }
 
