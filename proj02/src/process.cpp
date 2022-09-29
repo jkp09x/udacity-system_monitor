@@ -16,7 +16,7 @@ Process::Process(int pid) : pid_(pid) {}
 int Process::Pid() { return pid_; }
 
 // Return this process's CPU utilization
-float Process::CpuUtilization() { return cpu_; }
+float Process::CpuUtilization() const { return cpu_; }
 
 void Process::CpuUtilization(long currActive, long currSystem) {
   long active{currActive - prevActive};
@@ -26,7 +26,6 @@ void Process::CpuUtilization(long currActive, long currSystem) {
   prevSystem = currSystem;
   
   cpu_ = static_cast<float>(active) / system;
-  
 }
 
 // Return the command that generated this process
@@ -42,6 +41,11 @@ string Process::User() { return LinuxParser::User(Pid()); }
 long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
 
 // Overload the "less than" comparison operator for Process objects
-bool Process::operator<(Process& a) { 
+bool Process::operator<(const Process& a) const { 
   return CpuUtilization() < a.CpuUtilization(); 
+}
+
+// Overload the "greater than" comparison operator for Process objects
+bool Process::operator>(const Process& a) const { 
+  return CpuUtilization() > a.CpuUtilization(); 
 }

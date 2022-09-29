@@ -30,7 +30,7 @@ vector<Process>& System::Processes() {
     proc.CpuUtilization(LinuxParser::ActiveJiffies(proc.Pid()), LinuxParser::Jiffies());
   }
   
-  // TODO: Need to sort processes based on CPU Util
+  std::sort(processes_.begin(), processes_.end(), std::greater<Process>());
   
   return processes_;
 }

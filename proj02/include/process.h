@@ -14,15 +14,16 @@ class Process {
   int Pid();
   std::string User();
   std::string Command();
-  float CpuUtilization();
+  float CpuUtilization() const;
   void CpuUtilization(long currActive, long currSystem);
   std::string Ram();
   long int UpTime();
-  bool operator<(Process& a);
+  bool operator<(const Process& a) const;
+  bool operator>(const Process& a) const;
 
   // Declare any necessary private members
  private:
-  int pid_; // initialized to invalid PID value
+  int pid_;
   float cpu_{0};
   long prevActive{0};
   long prevSystem{0};

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 #include "linux_parser.h"
 
@@ -137,12 +138,12 @@ long LinuxParser::ActiveJiffies(int pid) {
     }
   }
   
-  if (values.size() > 16) {
+  if (values.size() > 21) {
     // 13 - user
     // 14 - kernel
     // 15 - child_user
     // 16 - child_kernel
-    return 99; //stol(values[13]) + stol(values[14]) + stol(values[15]) + stol(values[16]);
+    return stol(values[13]) + stol(values[14]) + stol(values[15]) + stol(values[16]);
   }
   
   return 0;
@@ -178,7 +179,7 @@ vector<string> LinuxParser::CpuUtilization() {
   string line;
   string key;
   string value;
-  std::vector<string> cpuTimes{};
+  std::vector<string> cpuTimes;
 
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
@@ -186,17 +187,17 @@ vector<string> LinuxParser::CpuUtilization() {
       std::istringstream linestream(line);
       while (linestream >> key) {
         if (key == "cpu") {
-          while (linestream >> value) {
-            cpuTimes.push_back(value);
+          while (linestream >> value) { 
+            cpuTimes.push_back(value); 
           }
+          return cpuTimes;
         }
       }
     }
-    return cpuTimes;
   }
   
   // return default value
-  return {};
+  return cpuTimes;
 }
 
 // Read and return the total number of processes
@@ -270,14 +271,13 @@ string LinuxParser::Ram(int pid) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "VmSize:") {
-          float ramValue = stof(value) / 100.0;
-          return to_string(ramValue);
+          return to_string(stoi(value) / 1024);
         }
       }
     }
   }
 
-  return string();
+  return "";
 }
 
 // Read and return the user ID associated with a process
@@ -320,7 +320,7 @@ string LinuxParser::User(int pid) {
   return "";
 }
 
-// Read and return the uptime of a process
+// TODO: Read and return the uptime of a process
 long int LinuxParser::UpTime(int pid) { 
   string line;
   string value;
