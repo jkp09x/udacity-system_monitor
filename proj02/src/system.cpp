@@ -20,9 +20,14 @@ Processor& System::Cpu() { return cpu_; }
 vector<Process>& System::Processes() { 
   vector<int> pids{LinuxParser::Pids()};
   
+  set<int> uniquePids;
+  for (Process& process : processes_) {
+    uniquePids.insert(process.Pid());
+  }
+  
   for (auto pid : pids) {
-    Process proc{pid};
-    processes_.emplace_back(proc);
+    if (uniquePids.find(pid) == uniquePids.end())
+      processes_.emplace_back(pid);
   }
   
   // Update CPU utilization

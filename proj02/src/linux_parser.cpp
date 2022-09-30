@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <iomanip>
 
 #include "linux_parser.h"
@@ -100,19 +99,13 @@ float LinuxParser::MemoryUtilization() {
 long LinuxParser::UpTime() { 
   string line;
   string t1;
-  string t2;
+
   std::ifstream filestream(kProcDirectory + kUptimeFilename);
   if (filestream.is_open()) {
-    while (std::getline(filestream, line)) {
-      std::istringstream linestream(line);
-      while (linestream >> t1 >> t2) {
-        long time1, time2;
-        time1 = stol(t1);
-        time2 = stol(t2);
-        
-        return time2 - time1;
-      }
-    }
+    std::getline(filestream, line);
+    std::istringstream linestream(line);
+    if (linestream >> t1)
+      return std::stoi(t1);
   }
   
   // return default value
@@ -320,7 +313,7 @@ string LinuxParser::User(int pid) {
   return "";
 }
 
-// TODO: Read and return the uptime of a process
+// Read and return the uptime of a process
 long int LinuxParser::UpTime(int pid) { 
   string line;
   string value;
@@ -332,8 +325,8 @@ long int LinuxParser::UpTime(int pid) {
       std::istringstream linestream(line);
       int i = 0;
       while (linestream >> value) {
-        if (i == 13) {
-          return stol(value) / sysconf(_SC_CLK_TCK);
+        if (i == 14) {
+          return static_cast<long int>(stof(value) / sysconf(_SC_CLK_TCK));
         }
         ++i;
       }
