@@ -40,11 +40,6 @@ string Process::User() { return LinuxParser::User(Pid()); }
 // Return the age of this process (in seconds)
 long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
 
-// Overload the "less than" comparison operator for Process objects
-bool Process::operator<(const Process& a) const { 
-  return CpuUtilization() < a.CpuUtilization(); 
-}
-
 // Overload the "greater than" comparison operator for Process objects
 bool Process::operator>(const Process& a) const { 
   return CpuUtilization() > a.CpuUtilization(); 

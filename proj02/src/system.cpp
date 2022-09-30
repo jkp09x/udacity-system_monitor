@@ -26,6 +26,7 @@ vector<Process>& System::Processes() {
   }
   
   for (auto pid : pids) {
+    // Add key to list if not found
     if (uniquePids.find(pid) == uniquePids.end())
       processes_.emplace_back(pid);
   }

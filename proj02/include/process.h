@@ -18,7 +18,6 @@ class Process {
   void CpuUtilization(long currActive, long currSystem);
   std::string Ram();
   long int UpTime();
-  bool operator<(const Process& a) const;
   bool operator>(const Process& a) const;
 
   // Declare any necessary private members
