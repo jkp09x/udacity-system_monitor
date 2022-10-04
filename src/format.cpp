@@ -10,11 +10,14 @@ using std::to_string;
 string Format::ElapsedTime(long seconds) { 
   string strHH, strMM, strSS;
   int hrs, min, sec;
+  const int SECS_IN_MIN{60};
+  const int MINS_IN_HR{60};
+  const int SECS_IN_HR{SECS_IN_MIN * MINS_IN_HR};
   
   // Compute hrs:min:sec
-  hrs = seconds / 3600;     
-  min = (seconds % 3600) / 60;
-  sec = seconds - (hrs*3600) - (min*60);
+  hrs = seconds / SECS_IN_HR;     
+  min = (seconds % SECS_IN_HR) / MINS_IN_HR;
+  sec = seconds - (hrs * SECS_IN_HR) - (min * MINS_IN_HR);
   
   // Convert to string 00:00:00 format
   strHH = DoubleDigitString(hrs);

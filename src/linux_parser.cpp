@@ -4,14 +4,22 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <iostream> //used only for debug
 
 #include "linux_parser.h"
 
+using std::cout;
 using std::stof;
 using std::stol;
 using std::string;
 using std::to_string;
 using std::vector;
+
+// Code provided by Udacity Admin as a helper function for debugging
+#define printVariableNameAndValue(x) cout<<"Variable Name: --"<<(#x)<<"-- and Variable Value: =>"<<x<<"\n"
+
+// MACRO to define how many chars to display for the cmd in the output table
+#define CMD_CHARS_TO_RETURN 40
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem() {
@@ -76,14 +84,15 @@ float LinuxParser::MemoryUtilization() {
   string value;
   float memTotal, memFree;
   std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "MemTotal:") {
+        if (key == filterMemTotalString) {
           memTotal = stof(value);
         }
-        if (key == "MemFree:") {
+        if (key == filterMemFreeString) {
           memFree = stof(value);
         }
       }
@@ -179,7 +188,7 @@ vector<string> LinuxParser::CpuUtilization() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key) {
-        if (key == "cpu") {
+        if (key == filterCpu) {
           while (linestream >> value) { 
             cpuTimes.push_back(value); 
           }
@@ -204,7 +213,7 @@ int LinuxParser::TotalProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "processes") {
+        if (key == filterProcesses) {
           totalProcs = stof(value);
           return totalProcs;
         }
@@ -227,7 +236,7 @@ int LinuxParser::RunningProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "procs_running") {
+        if (key == filterRunningProcesses) {
           procsRunning = stof(value);
           return procsRunning;
         }
@@ -245,26 +254,33 @@ string LinuxParser::Command(int pid) {
   std::ifstream filestream(kProcDirectory + to_string(pid) + kCmdlineFilename);
   if (filestream.is_open()) {
     std::getline(filestream, line);
-    return line;
+    return line.substr(0, CMD_CHARS_TO_RETURN);
   }
   
   return string();
 }
 
 // Read and return the memory used by a process
+// Using VmRSS for the memory instead of VmSize because
+// VmRSS is the physical memory usage
+// VmSize is the virtual memory usage which can be greater than physical memory available
 string LinuxParser::Ram(int pid) { 
   string line;
   string key;
   string value;
+  float val;
   
   std::ifstream filestream(kProcDirectory + to_string(pid) + kStatusFilename);
+  std::stringstream ss;
   
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "VmSize:") {
-          return to_string(stoi(value) / 1024);
+        if (key == filterProcMem) {
+          val = stof(value) / 1024.0;
+          ss << std::fixed << std::setprecision(2) << val;
+          return ss.str();
         }
       }
     }
@@ -285,7 +301,7 @@ string LinuxParser::Uid(int pid) {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> uid >> uidValue) {
-        if (uid == "Uid:") {
+        if (uid == filterUID) {
           return uidValue;
         }
       }
@@ -314,9 +330,14 @@ string LinuxParser::User(int pid) {
 }
 
 // Read and return the uptime of a process
+// Look at "man proc - /proc/[pid]/stat section"
+// Use 1-based index 22 which is the time the process started after system boot
+// Do not use index 14 utime - which is user time
 long int LinuxParser::UpTime(int pid) { 
   string line;
   string value;
+  
+  int sysUpTime{0}; 
   
   std::ifstream filestream(kProcDirectory + to_string(pid) + kStatFilename);
   
@@ -325,13 +346,21 @@ long int LinuxParser::UpTime(int pid) {
       std::istringstream linestream(line);
       int i = 0;
       while (linestream >> value) {
-        if (i == 14) {
-          return static_cast<long int>(stof(value) / sysconf(_SC_CLK_TCK));
+        // 22 - starttime (using 21 since index is zero-based)
+        if (i == 21) {
+          // Linux System Version Specific upTime
+          if (stof(LinuxParser::Kernel()) >= 2.6)
+            sysUpTime = stol(value) / sysconf(_SC_CLK_TCK);
+          else
+            sysUpTime = stol(value);
+          
+          auto uptimePid = static_cast<long>(UpTime() - sysUpTime);
+          return uptimePid;
         }
         ++i;
       }
     }
   }
   
-  return 0.0;
+  return 0;
 }
